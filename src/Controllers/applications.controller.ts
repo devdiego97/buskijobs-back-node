@@ -9,74 +9,26 @@ import { levelsModel } from "../Models/levels.model"
 import { contractTypeModel } from "../Models/contractType.model"
 import { modelOperatingModel } from "../Models/modelOperating.model"
 import { messagesModel } from "../Models/messagesview"
+import { ApplicationService } from "../services/application.service"
 
 
 export const applicationController = {
     
     getAllApplications:async(req:Request,res:Response)=>{
         try{
-            const {idcurriculum}=req.body
-
-            const applications=await applicationsModel.findAll(
-                {
-                    include:[
-                        {model:messagesModel,as:'messages'},
-                       {model:curriculumModel, as:'curriculum',
-                       include:[
-                         {model:usersModel,as:'user'}
-                       ]},
-                       { model:jobsModel, as:'job',
-                        include:[
-                            { model:companyModel, as:'company',
-                                include:[{model:usersModel,as:'user'}]
-                            },
-                            { model:categoryModel, as:'category'},
-                            { model:levelsModel, as:'levelJob'},
-                            { model:contractTypeModel, as:'jobContractType'},
-                            { model:modelOperatingModel , as:'modelOperating'}
-                        ]
-                       },
-                      
-                    ]
-                }
-            )
-            res.json(applications)
+            const applications=await ApplicationService.listApplications()
+            res.status(200).json(applications)
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(500).json({error:'algo deu erraodo.consulte o console'})
         }
     
     },
     getAllApplicationsFromUser:async(req:Request,res:Response)=>{
         try{
             const {idcurriculum}=req.params
-            const applications=await applicationsModel.findAll(
-                {
-                    where:{
-                       idcurriculum:idcurriculum
-                    },
-                    include:[
-                        {model:messagesModel,as:'messages'},
-                        { model:curriculumModel, as:'curriculum',
-                        include:[
-                          {model:usersModel,as:'user'},
-                          {model:levelsModel, as:'level'}
-                        ]},
-                        { model:jobsModel, as:'job',
-                          include:[
-                                { model:companyModel, as:'company',
-                                    include:[{model:usersModel,as:'user'}]
-                                },
-                                { model:categoryModel, as:'category'},
-                                { model:levelsModel, as:'levelJob'},
-                                { model:contractTypeModel, as:'jobContractType'},
-                                { model:modelOperatingModel , as:'modelOperating'}
-                            ]
-                       },
-                       
-                     ]
-                }
-            )
-            res.json(applications)
+            const response=await ApplicationService.listApplicationsFromUser(parseInt(idcurriculum))
+            res.status(200).json(response)
         }catch(e){
             res.json(e)
         }
@@ -85,33 +37,8 @@ export const applicationController = {
     getApplicationById:async(req:Request,res:Response)=>{
         try{
             let {id} = req.params
-            const applicationid=await applicationsModel.findByPk(parseInt(id as string),
-            {
-                include:[
-                    {model:messagesModel,as:'messages'},
-                    {model:curriculumModel,as:'curriculum',
-                    include:[ { model:usersModel, as:'user'},
-                        {model:levelsModel, as:'level'}]},
-                   { model:jobsModel, as:'job',
-                        include:[
-                            { model:companyModel, as:'company',
-                                include:[{model:usersModel,as:'user'}]
-                            },
-                            { model:categoryModel, as:'category'},
-                            { model:levelsModel, as:'levelJob'},
-                            { model:contractTypeModel, as:'jobContractType'},
-                            { model:modelOperatingModel , as:'modelOperating'}
-                        ]
-                   },
-                  
-                ]
-            })
-            if(applicationid){
-                res.json(applicationid)
-            }else{
-                res.json('candidatura não existe')
-            }
-    
+            let response=await ApplicationService.getApplicationId(parseInt(id))
+            res.status(200).json(response)
         }catch(e){
             res.json(e)
         }
@@ -120,10 +47,10 @@ export const applicationController = {
         try{
             const {idcurriculum,idjob,date}=req.body
             if(idcurriculum && idjob && date){
-                let newApplication=await applicationsModel.create({idcurriculum,idjob,date})
-                res.json({'message': 'candidatura feita com sucesso',newApplication})
+                let response=await ApplicationService.createApplication(idcurriculum,idjob,date)
+                res.status(200).json({'message': response})
             }else{
-                res.json('dados não enviados')
+                res.status(200).json('dados não enviados')
             }
         }catch(e){
             res.json(e)
@@ -132,8 +59,8 @@ export const applicationController = {
     deleteApplicationById:async(req:Request,res:Response)=>{
         try{
             let {id} = req.params
-            await applicationsModel.destroy({where:{id}})
-            res.json('candidatura excluida')
+            let response=await ApplicationService.deleteApplication(parseInt(id))
+            res.status(200).json(response)
         }catch(e){
             res.json(e)
         }

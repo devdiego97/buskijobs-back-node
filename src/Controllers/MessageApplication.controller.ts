@@ -1,11 +1,6 @@
 import { Request,Response } from "express"
-import { messagesModel } from "../Models/messagesview"
 import { messageSchemaPost, messageSchemaUpdate } from "../schemas/message"
-import { applicationsModel } from "../Models/applications.model"
-import { usersModel } from "../Models/users.model"
-import { jobsModel } from "../Models/jobs.model"
 import { MessageService } from "../services/message.service"
-import { parse } from "dotenv"
 
 
 
@@ -16,7 +11,8 @@ export  const MessageApplicationController={
             const list=await MessageService.listAllMessages()
             res.status(200).json(list)
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(400).json({error:'algo deu errado ma requisição.consulte o log'})
         }
     },
     //todas as mensagens recebidas de um usuário
@@ -27,8 +23,9 @@ export  const MessageApplicationController={
          res.status(200).json(response)
         
        }catch(e){
-            res.json(e)
-       }
+        console.log(e)
+        res.status(400).json({error:'algo deu errado ma requisição.consulte o log'})
+    }
     },
      //todas as mensagens recebidas de um recruiter
      getMessagesFromRecruiter:async(req:Request,res:Response)=>{
@@ -38,7 +35,8 @@ export  const MessageApplicationController={
           res.status(200).json(response)
          
         }catch(e){
-             res.json(e)
+            console.log(e)
+            res.status(400).json({error:'algo deu errado ma requisição.consulte o log'})
         }
      },
     //uma mensagem id
@@ -49,6 +47,7 @@ export  const MessageApplicationController={
             res.status(200).json(response)
         }catch(e){
             console.log(e)
+            res.status(400).json({error:'algo deu errado ma requisição.consulte o log'})
         }
     },
 
@@ -65,7 +64,8 @@ export  const MessageApplicationController={
                 res.status(200).json(response)
              }
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(400).json({error:'algo deu errado ma requisição.consulte o log'})
         }
     },
     updateMessageId:async(req:Request,res:Response)=>{
@@ -80,7 +80,8 @@ export  const MessageApplicationController={
                 res.json(result.error.details[0].message)
             }
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(400).json({error:'algo deu errado ma requisição.consulte o log'})
         }
     },
     deleteMessageId:async(req:Request,res:Response)=>{
@@ -90,6 +91,7 @@ export  const MessageApplicationController={
             res.status(200).json(response)
         }catch(e){
             console.log(e)
+            res.status(400).json({error:'algo deu errado ma requisição.consulte o log'})
         }
     }
 }
