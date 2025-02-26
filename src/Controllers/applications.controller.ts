@@ -1,14 +1,4 @@
 import { Request,Response } from "express"
-import { applicationsModel } from "../Models/applications.model"
-import { companyModel } from "../Models/companys.model"
-import { jobsModel } from "../Models/jobs.model"
-import { usersModel } from "../Models/users.model"
-import { curriculumModel } from "../Models/curriculum.model"
-import { categoryModel } from "../Models/categorys.model"
-import { levelsModel } from "../Models/levels.model"
-import { contractTypeModel } from "../Models/contractType.model"
-import { modelOperatingModel } from "../Models/modelOperating.model"
-import { messagesModel } from "../Models/messagesview"
 import { ApplicationService } from "../services/application.service"
 
 

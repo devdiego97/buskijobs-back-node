@@ -8,13 +8,13 @@ import  { Model,DataTypes } from "sequelize";
 
 
 
-export interface IContractTypeModel extends Model{
+export interface IContractType extends Model{
     id:number,
     name:string,
 
 }
 
-export const contractTypeModel=sequelizeConnection.define<IContractTypeModel>('contractTypeModel',
+export const contractTypeModel=sequelizeConnection.define<IContractType>('contractTypeModel',
     {
         id:{
             type:DataTypes.INTEGER,

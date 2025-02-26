@@ -1,6 +1,7 @@
 import { contractTypeModel } from './../Models/contractType.model';
 import { Response,Request } from "express"
 import { jobsModel } from "../Models/jobs.model"
+import { ContractTypeService } from '../services/contractType.service';
 
 
 
@@ -9,32 +10,21 @@ export const ContractTypesController={
     
     getContractTypeAll:async(req:Request,res:Response)=>{
         try{
-            const contractTypesList=await contractTypeModel.findAll({
-                include:[
-                    {model:jobsModel,as:'jobs'}
-                ]
-            })
-            res.json(contractTypesList)
+            const contractTypesList=await  ContractTypeService.listContractTypes()
+            res.status(200).json(contractTypesList)
 
         }catch(e){
-            res.json('algo deu errado')
+            res.status(500).json({error:'algo deu errado.consulte o log'})
             console.log(e)
         }
     },
     getContractTypeId:async(req:Request,res:Response)=>{
      try{
         const {id}=req.params
-        const contractTypeId=await contractTypeModel.findByPk(parseInt(id as string),{include:{model:jobsModel,as:'jobs'}})
-
-        if(contractTypeId){
-            res.json(contractTypeId)
-        }else{
-            res.json({message:"tipo de contrato profissional não existe"})
-        }
-        
-
+        const response=await ContractTypeService.getContractTypeFromId(parseInt(id))
+        res.status(200).json(response)
      }catch(e){
-        res.json('algo deu errado')
+        res.status(500).json({error:'algo deu errado.consulte o log'})
         console.log(e)
      }
 
