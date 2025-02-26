@@ -1,7 +1,8 @@
-import {Request,Response} from 'express'
+import {Request,response,Response} from 'express'
 import { jobsModel } from '../Models/jobs.model'
 import { schemaJob, schemaJobUpdate } from '../schemas/jobs'
 import { JobsService } from '../services/jobs.service'
+import { request } from 'http'
 
 
 
@@ -24,6 +25,43 @@ export const JobsController={
          console.log(e)
       }
     },
+    getFilteredListJobs:async (req:Request,res:Response)=>{
+      try{
+         const filters = req.query as {
+            modelOperating?: string
+            jobContractType?: string
+            state?: string
+            city?: string
+            category?: string,
+            
+          }
+
+          const { page = 1, pageSize = 10, sortBy = 'id', sortOrder = 'ASC' } = req.query
+      
+          const result = await JobsService.listFilteredAllJobs( {
+            page: Number(page),
+            pageSize: Number(pageSize),
+            sortBy: sortBy as string,
+            sortOrder: sortOrder as 'ASC' | 'DESC'
+           },filters)
+
+           res.status(200).json({
+            success: true,
+            data: result,
+            pagination: {
+              total: result.total,
+              totalPages: result.total,
+              currentPage: page,
+              pageSize,
+            },
+          })
+      }catch(e){
+         res.status(500).json({
+            success: false,
+            message: e instanceof Error ? e.message : 'Algo deu errado na requisição',
+          })
+      }
+    },
     getAllJobsFromCompany:async(req:Request,res:Response)=>{
       try{
          const {companyid}=req.params
@@ -33,27 +71,6 @@ export const JobsController={
          res.json(e)
          console.log(e)
       }
-    },
-     getFilteredJobsFromCompanyByStatus:async(req:Request,res:Response)=>{
-      try{
-         const {status}=req.params
-         const { page = 1, pageSize = 10, sortBy = 'id', sortOrder = 'ASC'} = req.query
-            const result = await JobsService.listAllJobs({
-               page: Number(page),
-               status:status,
-               pageSize: Number(pageSize),
-               sortBy: sortBy as string,
-               sortOrder: sortOrder as 'ASC' | 'DESC',
-             })
-     
-    
-          res.status(200).json(result);
-      }catch(e){
-         res.status(500).json(e)
-         console.log(e)
-      }
-
-   
     },
     getAllJobsFromCategory:async(req:Request,res:Response)=>{
       try{
@@ -65,27 +82,6 @@ export const JobsController={
          console.log(e)
       }
     },
-
-    getFilteredJobs:async(req:Request,res:Response)=>{
-      try{
-         const { category, mode, contractType, city, state, page = 1, limit = 10 } = req.query;
-
-         const filters = {
-           category: category as string | undefined,
-           mode: mode as string | undefined,
-           contractType: contractType as string | undefined,
-           city: city as string | undefined,
-           state: state as string | undefined,
-           page: parseInt(page as string, 10),
-           limit: parseInt(limit as string, 10),
-         };
-   
-         //const result = await JobsService.getJobsFiltered(filters)
-        // res.json(result)
-      }catch(e){
-         res.status(500).json({ error: 'Internal Server Error' })
-      }
-    },
     getJobById:async(req:Request,res:Response)=>{
       try{
          const {id}=req.params
@@ -95,7 +91,6 @@ export const JobsController={
          res.json(e)
          console.log(e)
       }
-
     },
     postJob:async(req:Request,res:Response)=>{
      
@@ -106,7 +101,7 @@ export const JobsController={
             if(result.error){
                res.json({'informações necessárias estão pendentes':result.error.message})
             }else{
-               const response=await jobsModel.create(jobData)
+               const response=await JobsService.createJob(jobData)
                res.status(200).json(response)
             }
 
@@ -133,7 +128,7 @@ export const JobsController={
    deleteJobById:async(req:Request,res:Response)=>{
       try{
          const {id} =req.params
-         await jobsModel.destroy({where: {id}})
+         await JobsService.deleteJobFromId(parseInt(id))
          res.json('vaga deletada')
       }catch(e){
          res.json(e)

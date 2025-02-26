@@ -20,9 +20,8 @@ const Routes=Router()
 
 ///jobs
 Routes.get('/jobs',JobsController.getAllJobs)
-Routes.get('/jobs',JobsController.getFilteredJobs)
+Routes.get('/jobs/filtered',JobsController.getFilteredListJobs)
 Routes.get('/companys/:companyid/jobs', JobsController.getAllJobsFromCompany)
-Routes.get('/companys/:companyid/jobs/:status', JobsController.getFilteredJobsFromCompanyByStatus)
 Routes.get('/categorys/:categoryid/jobs', JobsController.getAllJobsFromCategory)
 Routes.post('/jobs',JobsController.postJob)
 Routes.get('/jobs/:id',JobsController.getJobById)

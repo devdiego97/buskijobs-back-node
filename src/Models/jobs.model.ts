@@ -44,15 +44,25 @@ export const jobsModel=sequelizeConnection.define<IJobs>('jobsModel',
         },
         jobContractTypeId:{
             type:DataTypes.INTEGER,
+            references: {
+                model: contractTypeModel, 
+                key: 'id',
+            }
             
         },
         modelOperatingId:{
             type:DataTypes.INTEGER,
-            
+            references: {
+                model: modelOperatingModel, 
+                key: 'id',
+            }
         },
         categoryid:{
             type:DataTypes.INTEGER,
-            
+            references: {
+                model: categoryModel, 
+                key: 'id',
+            }
         },
         title:{
             type:DataTypes.STRING,

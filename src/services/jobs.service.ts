@@ -8,11 +8,21 @@ import { levelsModel } from "../Models/levels.model"
 import { modelOperatingModel } from "../Models/modelOperating.model"
 import { usersModel } from "../Models/users.model"
 
+
+interface Filters {
+    modelOperatingId?: number;
+    jobContractTypeId?: number;
+    state?: string;
+    city?: string;
+    categoryid?: number;
+  }
+
 interface PaginationOptions {
     page: number;
     pageSize: number;
     sortBy: string;
     status?:string,
+    companyid?:number,
     sortOrder: 'ASC' | 'DESC';
   }
   
@@ -21,16 +31,11 @@ interface PaginationOptions {
     page: number
     pageSize: number
     data: IJobs[],
-    status?:string
+    companyid?:number,
+    
   }
 
-  interface FilterOptions {
-    category?: string;
-    mode?: string;
-    contractType?: string;
-    city?: string;
-    state?: string;
-  }
+ 
   
 
 
@@ -44,6 +49,48 @@ export const JobsService={
         const offset = (page - 1) * pageSize;
     
         const { count, rows } = await jobsModel.findAndCountAll({
+            include:[
+                {
+                   model:applicationsModel,as:'applications',
+                   include:[{model:curriculumModel,as:'curriculum',
+                   include:[{model:usersModel,as:'user'}]
+                   }]
+                },
+                { model:companyModel, as:'company',include:[ {model:usersModel, as:'user'}]},
+                { model:categoryModel, as:'category'},
+                { model:levelsModel, as:'levelJob'},
+                { model:contractTypeModel, as:'jobContractType'},
+                { model:modelOperatingModel , as:'modelOperating'}
+            ],
+          order: [[sortBy, sortOrder]],
+          offset: offset,
+          limit: pageSize,
+        });
+    
+        return {
+          total: count,
+          page,
+          pageSize,
+          data: rows,
+        }
+      
+    },
+    listFilteredAllJobs:async (options: PaginationOptions,filters:Filters): Promise<PaginatedResult>=>{
+        const { modelOperatingId, jobContractTypeId, state, city, categoryid } = filters
+        const { page, pageSize, sortBy, sortOrder } = options
+
+        const whereClause: any = {};
+
+        if (modelOperatingId) whereClause.modelOperating = modelOperatingId;
+        if (jobContractTypeId) whereClause.jobContractType = jobContractTypeId;
+        if (state) whereClause.state = state;
+        if (city) whereClause.city = city;
+        if (categoryid) whereClause.category = categoryid;
+      
+        const offset = (page - 1) * pageSize;
+    
+        const { count, rows } = await jobsModel.findAndCountAll({
+            where:whereClause,
             include:[
                 {
                    model:applicationsModel,as:'applications',
@@ -125,67 +172,7 @@ export const JobsService={
           
         }
     },
-    getJobsFiltered:async(status:'Ativa' | 'Cancelada' | 'Finalizada' | 'string')=>{
-        try{
-            const jobsListAll=await jobsModel.findAll(
-                       {
-                            where:{status},
-                            include:[
-                             {
-                                model:applicationsModel,as:'applications',
-                                include:[{model:curriculumModel,as:'curriculum',
-                                include:[{model:usersModel,as:'user'}]
-                                }]
-                             },
-                             { model:companyModel, as:'company',include:[ {model:usersModel, as:'user'}]},
-                             { model:categoryModel, as:'category'},
-                             { model:levelsModel, as:'levelJob'},
-                             { model:contractTypeModel, as:'jobContractType'},
-                             { model:modelOperatingModel , as:'modelOperating'}
-                         ]
-                          
-                       })
-                   return jobsListAll
-       }catch(e){
-          console.log(e)
-           return {error:'algo deu errado.consulte o log'}
-         
-       }
-    },
-    listFilteredJobsFromCompanyByStatus:async(options:PaginationOptions,status:string):Promise<PaginatedResult | []>=>{
-            const { page, pageSize, sortBy, sortOrder} = options
-            const offset = (page - 1) * pageSize;
-        
-            const { count, rows } = await jobsModel.findAndCountAll({
-                where:{status},
-                include:[
-                    {
-                       model:applicationsModel,as:'applications',
-                       include:[{model:curriculumModel,as:'curriculum',
-                       include:[{model:usersModel,as:'user'}]
-                       }]
-                    },
-                    { model:companyModel, as:'company',include:[ {model:usersModel, as:'user'}]},
-                    { model:categoryModel, as:'category'},
-                    { model:levelsModel, as:'levelJob'},
-                    { model:contractTypeModel, as:'jobContractType'},
-                    { model:modelOperatingModel , as:'modelOperating'}
-                ],
-              order: [[sortBy, sortOrder]],
-              offset: offset,
-              limit: pageSize,
-              
-            });
-        
-            return {
-              total: count,
-              page,
-              pageSize,
-              data: rows,
-            }
-          
-        }
-    ,
+   
     getJobFromId:async(id:number):Promise<IJobs | object>=>{
         try{
             const jobId=await jobsModel.findOne({where: {id},
@@ -217,7 +204,7 @@ export const JobsService={
           
         }
     },
-    createCompany:async(job:Omit<IJobs,'id'>):Promise<IJobs | object>=>{
+    createJob:async(job:Omit<IJobs,'id'>):Promise<IJobs | object>=>{
         try{
             const newJob=await jobsModel.create(job)
             return newJob
@@ -230,7 +217,7 @@ export const JobsService={
     putJobFromId:async(data:Omit<IJobs,"id">,id:number):Promise<object>=>{
         try{
             await jobsModel.update(data,{where:{id}})
-            return{message:'vaga atualizada'}
+            return {message:'vaga atualizada'}
         }catch(e){
            console.log(e)
             return {error:'algo deu errado.consulte o log'}
