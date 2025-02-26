@@ -2,7 +2,7 @@ import { sequelizeConnection } from "../config/sequelize.config";
 import { Model,DataTypes } from "sequelize";
 import { curriculumModel } from "./curriculum.model";
 
-interface trainningsInterface extends Model{
+export interface ITrainning extends Model{
     id:number,
     idcurriculum:number,
     school:string,
@@ -13,7 +13,7 @@ interface trainningsInterface extends Model{
     active:number
 }
 
-export const trainningsModel = sequelizeConnection.define<trainningsInterface>('trainningsModel',{
+export const trainningsModel = sequelizeConnection.define<ITrainning>('trainningsModel',{
     id:{
         type:DataTypes.INTEGER,
         primaryKey:true,

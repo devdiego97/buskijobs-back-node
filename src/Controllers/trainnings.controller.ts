@@ -1,61 +1,58 @@
-import { Request,Response } from "express"
-import { trainningsModel } from "../Models/trainning.model"
+import { Request,response,Response } from "express"
 import { schemaTrainnig, schemaTrainnigUpdate } from "../schemas/trainnings"
+import { TrainningService } from "../services/trainnings.service"
+import { ITrainning } from "../Models/trainning.model"
 
-export const trainningController ={
+export const trainningController={
 
     getAllTrainnings:async(req:Request,res:Response)=>{
         try{
-            let trainnings=await trainningsModel.findAll()
-            res.json(trainnings);
+            let trainnings=await TrainningService.lisAllTrainnings()
+            res.status(200).json(trainnings);
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(500).json({error:'algo deu errado na requisição.consulte o log'})
+
         }
     },
     getAllTrainningsFromCurriculum:async(req:Request,res:Response)=>{
         try{
             const {idcurriculum}=req.params
-            const trainnings=await trainningsModel.findAll(
-                {
-                    where:{idcurriculum}
-                }
-            )
-            if(trainnings){
-                res.json(trainnings)
-            }else{
-                res.json({message:'esse usuário não possui formação e cursos'})
-            }
+            const result=await TrainningService.listTrainningsByCurriculum(parseInt(idcurriculum))
+            res.status(200).json(result)
          }catch(e){
-             res.json(e)
-         }
+            console.log(e)
+            res.status(500).json({error:'algo deu errado na requisição.consulte o log'})
+
+        }
      
     },
     getTrainningById:async(req:Request,res:Response)=>{
         try{
             let {id}=req.params
-            let trainningId=await trainningsModel.findByPk(parseInt(id as string))
-            if(trainningId){
-                res.json(trainningId)
-            }else{
-                res.json({'message':'treinamento não existe'})
-            }
+            let result=await TrainningService.getTrainningById(parseInt(id))
+           res.status(500).json(result)
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(500).json({error:'algo deu errado na requisição.consulte o log'})
+
         }
     },
     postTrainning:async(req:Request,res:Response)=>{
         try{
-            const data=req.body
+            const {data}=req.body
             const result=schemaTrainnig.validate(data)
             if(result.error){
-                res.json(result.error.message)
+                res.status(500).json(result.error.message)
             }else{
-                const newtrainning=await trainningsModel.create(data)
-                res.json(newtrainning)
+                const response=await TrainningService.addTrainning(data)
+                res.status(201).json(response)
             }
         
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(500).json({error:'algo deu errado na requisição.consulte o log'})
+
         }
     },
      
@@ -67,22 +64,25 @@ export const trainningController ={
             if(result.error){
                 res.json(result.error.message)
             }else{
-              await trainningsModel.update(data,{where:{id}})
-              res.json('treinamento atualizado')
+             let  response=await TrainningService.updateTrainningFromId(data,parseInt(id))
+              res.status(200).json(response)
             }
         
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(500).json({error:'algo deu errado na requisição.consulte o log'})
+
         }
         
     },
     deleteTrainningById:async(req:Request,res:Response)=>{
         try{
             let {id}=req.params
-            await trainningsModel.destroy({where:{id}})
-            res.json({"success":'treinamento deletada'})
+            let response=await TrainningService.deleteTrainningFromId(parseInt(id))
+            res.status(200).json(response)
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(500).json({error:'algo deu errado na requisição.consulte o log'})
         }
     }
 

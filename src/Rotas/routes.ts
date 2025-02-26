@@ -50,7 +50,7 @@ Routes.get('/categorys',CategoryController.getCategorys)
 Routes.post('/categorys',upload.single('logo'),CategoryController.postCategory)
 Routes.get('/categorys/:id',CategoryController.getCategoryId)
 Routes.put('/categorys/:id',CategoryController.updateCategory)
-Routes.delete('/categorys/:id',CategoryController.deleteCategorys)
+Routes.delete('/categorys/:id',CategoryController.deleteCategory)
 
 
 //companys

@@ -7,13 +7,8 @@ export const CategoryController={
     
     getCategorys:async(req:Request,res:Response)=>{
         try{
-            const categorysList=await categoryModel.findAll({
-                include:[
-                    {model:jobsModel,as:'jobs'}
-                ]
-            })
-            res.json(categorysList)
-
+            const result=await CategoryService.listAllCategories()
+            res.status(200).json(result)
         }catch(e){
             res.json('algo deu errado')
             console.log(e)
@@ -63,7 +58,7 @@ export const CategoryController={
             console.log(e)
         }
     },
-    deleteCategorys:async(req:Request,res:Response)=>{
+    deleteCategory:async(req:Request,res:Response)=>{
         try{
             const {id}=req.params
              const response=await CategoryService.deleteCategoryFromId(parseInt(id as string))
