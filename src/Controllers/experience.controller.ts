@@ -1,45 +1,32 @@
 import { Request,Response } from "express"
 import { experiencesModel } from "../Models/experiences.model"
-import z from 'zod'
 import { schemaExperience, schemaExperienceUpdate } from "../schemas/experience"
+import { ExperienceService } from "../services/experience.service"
 
-const experienceSchema = z.object({
-    idcurriculum: z.string(),
-    description:z.string().min(12).trim(),
-    office:z.string().min(12).trim(),
-    companyname:z.string().min(4).trim(),
-    start:z.string().trim(),
-    end:z.string().trim(),
-    active:z.string().trim(),
-    
-  });
+
 
 
 export const experinceController ={
+   
     getAllExperiences:async(req:Request,res:Response)=>{
         try{
-            const experiences=await experiencesModel.findAll()
-             res.json(experiences)
+             const experiences=await ExperienceService.listAllExperiences()
+             res.status(200).json(experiences)
          }catch(e){
-             res.json(e)
+             console.log(e)
+             res.status(500).json({error:'erro na requisição.colulte os logs'})
          }
      
     },
     getAllExperiencesFromCurriculum:async(req:Request,res:Response)=>{
         try{
             const {idcurriculum}=req.params
-            const experiences=await experiencesModel.findAll(
-                {
-                    where:{idcurriculum}
-                }
-            )
-            if(experiences){
-                res.json(experiences)
-            }else{
-                res.json({message:'esse curriculo não possui experiencias'})
-            }
+            const experiences=await ExperienceService.getExperiencesFromCurriculum(parseInt(idcurriculum))
+            res.status(200).json({message:'esse curriculo não possui experiencias'})
+          
          }catch(e){
-             res.json(e)
+            console.log(e)
+             res.status(500).json({error:'erro na requisição.colulte os logs'})
          }
      
     },
@@ -55,7 +42,8 @@ export const experinceController ={
                     res.json({'message':'experiencia não existe'})
                 }
             }catch(e){
-                res.json(e)
+                console.log(e)
+                res.status(500).json({error:'erro na requisição.colulte os logs'})
             }
     },
     postExperience:async(req:Request,res:Response)=>{
@@ -66,12 +54,13 @@ export const experinceController ={
             if(result.error){
                 res.json(result.error.message)
             }else{
-                const newExperience=await experiencesModel.create(data)
-                res.json(newExperience)
+                const response=await ExperienceService.createExperience(data)
+                res.status(201).json(response)
             }
 
         }catch(e){
-            res.json(e)
+            console.log(e)
+             res.status(500).json({error:'erro na requisição.colulte os logs'})
         }
         
     },
@@ -85,25 +74,24 @@ export const experinceController ={
             if(result.error){
                 res.json(result.error.message)
             }else{
-                await experiencesModel.update(data,{where:{id}})
-                res.json('experiencia atualizada')
+                await ExperienceService.putExperienceFromId(data,parseInt(id))
+                res.status(200).json('experiencia atualizada')
             }
 
         }catch(e){
-            res.json(e)
+            console.log(e)
+             res.status(500).json({error:'erro na requisição.colulte os logs'})
         }
     },
     deleteExperienceById:async(req:Request,res:Response)=>{
         try{
             let {id} = req.params
-            let experience=await experiencesModel.findOne({where:{id}})
-            if(experience){
-                await experiencesModel.destroy({where:{id}})
-                res.json({'success':'experience deletada'})
-            }else{
-                res.json({'message':'experience não existe'})
-            }
+            let response=await ExperienceService.deleteExperienceFromId(parseInt(id))
+            res.status(200).json(response)
+           
         }catch(e){
+            console.log(e)
+            res.status(500).json({error:'erro na requisição.colulte os logs'})
         }
     }
 
