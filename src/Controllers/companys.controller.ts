@@ -1,7 +1,7 @@
 
 import { CompanyType } from './../types/company'
 import { Request,Response } from "express"
-import { companyModel } from "../Models/companys.model"
+import { companyModel, ICompany } from "../Models/companys.model"
 import z from 'zod'
 import { jobsModel } from "../Models/jobs.model"
 import path from 'path'
@@ -11,104 +11,38 @@ import fs from 'fs/promises'
 import { curriculumModel } from '../Models/curriculum.model'
 import { categoryModel } from '../Models/categorys.model'
 import { applicationsModel } from '../Models/applications.model'
+import { CompanyService, RequestCompany } from '../services/company.service'
 
 
-const companySchema=z.object({
-    name:z.string().trim().max(40),
-    city:z.string().trim(),
-    tel:z.string().trim(),
-    email:z.string().email().trim(),
-    state:z.string().trim(),
-    about:z.string().trim().min(100),
-    cnpj:z.string().trim().min(14).max(20),
- 
-}).required()
 
 export const companyController={
     getAllCompanys:async(req:Request,res:Response)=>{
         try{
-            const companys=await companyModel.findAll({
-                include:[
-                   {model:usersModel,as:'user'},
-                    {model:jobsModel,as:'jobs',
-                    include:[          
-                        {
-                           model:applicationsModel,as:'applications',
-                           include:[{model:curriculumModel,as:'curriculum',
-                           include:[{model:usersModel,as:'user'}]
-                           }]
-                        },
-                       { model:companyModel, as:'company',include:[ {model:usersModel, as:'user'}]},
-                        { model:categoryModel, as:'category'}
-                    ]
-                  },
-                    
-                ]
-            })
-            res.json(companys)
+            const companys=await CompanyService.listAllCompanys()
+            res.status(200).json(companys)
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(500).json({error:'erro na requisição.consulte o log'})
         }
     },
     getCompanyFromUser:async(req:Request,res:Response)=>{
         try{
             const {idcreator}=req.params
-            const company=await companyModel.findOne({
-                where:{idcreator},
-                include:[
-                    {model:jobsModel,as:'jobs',
-                    include:[
-                        {
-                           model:applicationsModel,as:'applications',
-                           include:[{model:curriculumModel,as:'curriculum',
-                           include:[{model:usersModel,as:'user'}]
-                           }]
-                        },
-                        { model:companyModel, as:'company',include:[ {model:usersModel, as:'user'}]},
-                        { model:categoryModel, as:'category'}
-                    ]
-                    },
-                    {model:usersModel,as:'user'}
-                ]
-            })
-           if(company){
-            res.json(company)
-           }else{
-            res.json({message:'esse usuário nao possui uma empresa cadastrada'})
-           }
+            const response=await CompanyService.getCompanyFromUser(parseInt(idcreator))
+            res.status(200).json(response)
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(500).json({error:'erro na requisição.consulte o log'})
         }
     },
     getCompanyById:async(req:Request,res:Response)=>{
         try{    
             const {id}=req.params
-            const companyId=await companyModel.findOne({where:{id},
-                include:[
-                    {model:jobsModel,as:'jobs',
-                        include:[
-                            {
-                                model:applicationsModel,as:'applications',
-                                include:[{model:curriculumModel,as:'curriculum',
-                                include:[{model:usersModel,as:'user'}]
-                            }]
-                            },
-                            { model:companyModel, as:'company',include:[{model:usersModel, as:'user'}]},
-                            { model:categoryModel, as:'category'}
-                        ]
-                    },
-                    {model:usersModel,as:'user'},
-                  
-                   
-                ]})
-            if(companyId){
-                res.json(companyId)
-            }else{
-                res.json('empresa não existe')
-            }
-
+            const response=await CompanyService.getCompanyFromId(parseInt(id))
+            res.status(200).json(response)
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(500).json({error:'erro na requisição.consulte o log'})
         }
     },
     postCompany:async(req:Request,res:Response)=>{
@@ -122,12 +56,14 @@ export const companyController={
                 if(req.file){
                     logo=req.file ? `${req.file.filename}` : null
                 }
-                const newCompany = await companyModel.create({...data,logo})
-                res.json(newCompany)
+               const d={...data,logo}
+               let response=await CompanyService.createCompany(d as Omit<ICompany, "id">) 
+               res.status(201).json(response) 
             }
          
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(500).json({error:'erro na requisição.consulte o log'})
         }
     },
     updateCompanyById:async(req:Request,res:Response)=>{
@@ -149,8 +85,9 @@ export const companyController={
                     }
     
                     const newLogo = req.file ? `${req.file.filename}` : company.logo;
-                    await companyModel.update({...data,logo:newLogo},{where:{id}})
-                    res.json('empresa atualizada')
+                    let d={...data,logo:newLogo}
+                    let response=await CompanyService.putCompanyFromId(parseInt(id),d as RequestCompany)
+                    res.status(200).json(response)
                 }
             }
         else{
@@ -158,40 +95,24 @@ export const companyController={
                 const logoNewPath = path.join('public/images/', req.file.filename)
                 await fs.unlink(logoNewPath)
             }
-            res.json('empresa não existe')
+            res.status(200).json({message:'empresa não existe'})
         }
 
       }catch(e){
-        res.json(e)
-      }
+        console.log(e)
+        res.status(500).json({error:'erro na requisição.consulte o log'})
+    }
 
 
     },
     deleteCompanyById:async(req:Request,res:Response)=>{
         try{
             let {id}=req.params
-            let company=await companyModel.findOne({where:{id}})
-            if(company){
-                if(company.logo){
-                    const logoAntigaPath = path.join(__dirname, `./../../${company.logo}`)
-                    try {
-                      await fs.unlink(logoAntigaPath);
-                      console.log('logo antiga excluída com sucesso.');
-                    } catch (error) {
-                      console.error('Erro ao excluir a logo antiga:', error)
-                    }
-                }
-                await companyModel.destroy({
-                    where:{id}
-                })
-                res.json({'message':'empresa deletada'})
-            }else{
-                res.json({'message':'empresa não existe'})
-            }
-    
-    
+            let response=await CompanyService.deleteCompanyFromId(parseInt(id))
+            res.status(200).json(response)
         }catch(e){
-            res.json(e)
+            console.log(e)
+            res.status(500).json({error:'erro na requisição.consulte o log'})
         }
     }
 }

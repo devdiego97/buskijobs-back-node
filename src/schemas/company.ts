@@ -2,6 +2,7 @@ import j from 'joi'
 
 export const schemaCompany = j.object().keys({
     idcreator:j.number().required(),
+    logo:j.string().optional(),
     about:j.string().min(50).max(1000).required(),
     cnpj:j.string().length(14).pattern(/^\d{14}$/,"formato inválido,remova espaços,barras,traços u pontos").message('o cnpj deve ter 14 números somente'),
     instagram:j.string().allow(null).default(null).optional(),
