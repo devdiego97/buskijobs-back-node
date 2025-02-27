@@ -2,7 +2,7 @@ import { sequelizeConnection } from "../config/sequelize.config";
 import sequelize, { DataTypes, Model } from "sequelize";
 
 
-interface UserInterface extends Model{
+export interface IUser extends Model{
     id:number,
     name:string,
     lastname:string,
@@ -17,7 +17,7 @@ interface UserInterface extends Model{
 }
 
 
-export const usersModel =sequelizeConnection.define<UserInterface>('users',
+export const usersModel =sequelizeConnection.define<IUser>('users',
   {
     id:{
         type:DataTypes.INTEGER,
